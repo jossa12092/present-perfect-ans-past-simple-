@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Life Experiences Listening Lab</title>
+<style>
+:root{
+  --bg:#f4f7fb; --card:#ffffff; --ink:#15233b; --muted:#667085;
+  --accent:#2457d6; --accent2:#173c98; --ok:#137a52; --bad:#b42318;
+  --line:#d9e1ef; --soft:#eaf0ff; --warn:#fff7e6;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+.wrap{max-width:980px;margin:auto;padding:22px}
+.hero{background:linear-gradient(135deg,#173c98,#2d6cdf);color:white;border-radius:24px;padding:28px}
+.hero h1{margin:0 0 8px;font-size:clamp(28px,5vw,46px)}
+.hero p{margin:5px 0;opacity:.94;line-height:1.5}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.chip{padding:8px 12px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:999px;font-size:14px}
+.toolbar,.card{background:var(--card);border:1px solid var(--line);border-radius:20px;margin-top:18px;padding:20px}
+.toolbar{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:end}
+label{display:block;font-weight:700;margin-bottom:7px}
+select,input[type=text]{width:100%;font-size:16px;padding:12px;border:1px solid #b9c5d8;border-radius:12px;background:#fff;color:var(--ink)}
+.progress{margin-top:18px;background:#dfe6f3;height:10px;border-radius:10px;overflow:hidden}
+.bar{height:100%;width:0;background:var(--accent);transition:.25s}
+.toprow{display:flex;justify-content:space-between;gap:12px;align-items:center}
+.badge{font-size:13px;background:var(--soft);color:var(--accent2);padding:7px 10px;border-radius:999px;font-weight:800}
+.audio-box{margin:16px 0;padding:16px;border-radius:16px;background:#f7f9fd;border:1px solid var(--line)}
+.audio-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+button{border:0;border-radius:12px;padding:12px 16px;font-size:16px;font-weight:800;cursor:pointer}
+.primary{background:var(--accent);color:white}
+.secondary{background:#e8edf7;color:#1d355d}
+button:disabled{opacity:.45;cursor:not-allowed}
+.question{font-size:20px;font-weight:800;line-height:1.35;margin:16px 0 12px}
+.options{display:grid;gap:10px}
+.opt{display:flex;align-items:flex-start;gap:10px;border:1px solid var(--line);border-radius:13px;padding:12px;cursor:pointer;background:white}
+.opt input{margin-top:3px;transform:scale(1.2)}
+.feedback{margin-top:13px;padding:12px 14px;border-radius:12px;font-weight:700;display:none}
+.feedback.ok{display:block;background:#e9f8f2;color:var(--ok);border:1px solid #a9dfca}
+.feedback.bad{display:block;background:#fff0ee;color:var(--bad);border:1px solid #f2b8b2}
+.nav{display:flex;justify-content:space-between;gap:10px;margin-top:18px}
+.meta{font-size:14px;color:var(--muted);line-height:1.5}
+.listen-tip{background:var(--warn);border:1px solid #f4d79a;border-radius:14px;padding:12px 14px;margin-top:12px}
+.result{text-align:center;padding:10px 0 5px}
+.result .score{font-size:62px;font-weight:900;color:var(--accent2)}
+.hidden{display:none!important}
+.speakbox{margin-top:14px;padding:14px;background:#f6fbf8;border:1px solid #cce8da;border-radius:14px}
+@media(max-width:640px){
+ .wrap{padding:12px}.toolbar{grid-template-columns:1fr}.hero{padding:22px}.card{padding:16px}.nav{flex-direction:column}.nav button{width:100%}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section class="hero">
+    <h1>Life Experiences Listening Lab</h1>
+    <p><b>Rama Judicial · English A1+/A2</b></p>
+    <p>Listen carefully, understand the experience, and choose the grammar that matches the message.</p>
+    <div class="chips">
+      <span class="chip">Present Perfect</span>
+      <span class="chip">Past Simple</span>
+      <span class="chip">Have you ever...?</span>
+      <span class="chip">Listening + Speaking</span>
+    </div>
+  </section>
+
+  <section class="toolbar">
+    <div>
+      <label for="voiceSel">English voice</label>
+      <select id="voiceSel"><option>Loading voices…</option></select>
+    </div>
+    <div>
+      <label for="speedSel">Audio speed</label>
+      <select id="speedSel">
+        <option value="0.78">Slow</option>
+        <option value="0.90" selected>Class speed</option>
+        <option value="1.00">Natural</option>
+      </select>
+    </div>
+  </section>
+
+  <div class="progress"><div id="bar" class="bar"></div></div>
+
+  <main id="quizCard" class="card">
+    <div class="toprow">
+      <span id="sectionBadge" class="badge"></span>
+      <span id="counter" class="meta"></span>
+    </div>
+
+    <div class="audio-box">
+      <div class="audio-actions">
+        <button id="playBtn" class="primary">▶ Play audio</button>
+        <button id="repeatBtn" class="secondary">↻ Replay</button>
+        <span id="plays" class="meta">Plays: 0</span>
+      </div>
+      <div class="listen-tip"><b>Listening rule:</b> Listen first. Read the question after you hear the audio.</div>
+    </div>
+
+    <div id="question" class="question"></div>
+    <div id="answerArea"></div>
+    <div id="feedback" class="feedback"></div>
+
+    <div class="speakbox">
+      <b>Speak it:</b> <span id="speakPrompt"></span>
+      <div class="meta">Say your answer aloud after checking the listening question.</div>
+    </div>
+
+    <div class="nav">
+      <button id="checkBtn" class="primary">Check answer</button>
+      <button id="nextBtn" class="secondary" disabled>Next →</button>
+    </div>
+  </main>
+
+  <section id="resultCard" class="card hidden">
+    <div class="result">
+      <div class="badge">FINAL RESULT</div>
+      <div id="scoreText" class="score">0%</div>
+      <h2 id="resultTitle"></h2>
+      <p id="resultMsg" class="meta"></p>
+      <button id="restartBtn" class="primary">Try again</button>
+    </div>
+  </section>
+
+  <p class="meta" style="text-align:center;margin:18px 6px 28px">
+    Original listening scripts created for this activity. Audio is generated by the browser's English speech engine.
+  </p>
+</div>
+
+<script>
+const items = [
+{
+ section:"1 · Travel Experience",
+ audio:"Hi, I'm Laura. I have traveled to Ecuador three times. I first went there in 2019 with my sister. We visited Quito and we tried traditional food. I have never visited the Galapagos Islands, but I would love to go there one day.",
+ type:"mc",
+ q:"How many times has Laura traveled to Ecuador?",
+ opts:["One time","Two times","Three times","She has never traveled there"], ans:2,
+ explain:"Laura says: she has traveled to Ecuador three times.",
+ speak:"Have you ever traveled to another city or country? Answer: Yes, I have... / No, I haven't."
+},
+{
+ section:"1 · Travel Experience",
+ audio:"Hi, I'm Laura. I have traveled to Ecuador three times. I first went there in 2019 with my sister. We visited Quito and we tried traditional food. I have never visited the Galapagos Islands, but I would love to go there one day.",
+ type:"mc",
+ q:"When did Laura first go to Ecuador?",
+ opts:["In 2019","In 2020","Last month","The audio doesn't say"], ans:0,
+ explain:"A specific finished time — 2019 — is given.",
+ speak:"Say one trip with a specific time: I went to ___ in ___."
+},
+{
+ section:"1 · Travel Experience",
+ audio:"Hi, I'm Laura. I have traveled to Ecuador three times. I first went there in 2019 with my sister. We visited Quito and we tried traditional food. I have never visited the Galapagos Islands, but I would love to go there one day.",
+ type:"fill",
+ q:"Complete: Laura has never visited the ______ Islands.",
+ ansText:["galapagos","galápagos"],
+ explain:"The missing word is Galapagos.",
+ speak:"Say: I have never visited ___, but I would like to."
+},
+{
+ section:"2 · Professional Experience",
+ audio:"My name is Carlos. I have worked in the Judicial Branch for eight years. I started my current position in 2018. During my career, I have learned to communicate with many different people. Last year, I completed a course in public service.",
+ type:"mc",
+ q:"Where has Carlos worked for eight years?",
+ opts:["At a university","In the Judicial Branch","At a hospital","In a private company"], ans:1,
+ explain:"Carlos says he has worked in the Judicial Branch for eight years.",
+ speak:"How long have you worked in your current job?"
+},
+{
+ section:"2 · Professional Experience",
+ audio:"My name is Carlos. I have worked in the Judicial Branch for eight years. I started my current position in 2018. During my career, I have learned to communicate with many different people. Last year, I completed a course in public service.",
+ type:"mc",
+ q:"Which sentence mentions a finished, specific past time?",
+ opts:["I have worked in the Judicial Branch for eight years.","I have learned to communicate with many people.","Last year, I completed a course in public service.","I have worked with different people."], ans:2,
+ explain:"“Last year” gives a specific finished time, so Past Simple is natural.",
+ speak:"Say one professional experience using 'last year'."
+},
+{
+ section:"2 · Professional Experience",
+ audio:"My name is Carlos. I have worked in the Judicial Branch for eight years. I started my current position in 2018. During my career, I have learned to communicate with many different people. Last year, I completed a course in public service.",
+ type:"fill",
+ q:"Complete: During my career, I have ______ to communicate with many different people.",
+ ansText:["learned","learnt"],
+ explain:"The audio says: I have learned to communicate...",
+ speak:"Say: During my career, I have learned to ___."
+},
+{
+ section:"3 · New Experiences",
+ audio:"Have you ever tried something that made you nervous? I have. Two months ago, I gave a presentation in English for the first time. I was very nervous at the beginning, but I finished it successfully. Since then, I have practiced speaking more often.",
+ type:"mc",
+ q:"What did the speaker do two months ago?",
+ opts:["Traveled abroad","Gave a presentation in English","Started a new job","Took an English exam"], ans:1,
+ explain:"The speaker gave a presentation in English two months ago.",
+ speak:"Have you ever given a presentation in English?"
+},
+{
+ section:"3 · New Experiences",
+ audio:"Have you ever tried something that made you nervous? I have. Two months ago, I gave a presentation in English for the first time. I was very nervous at the beginning, but I finished it successfully. Since then, I have practiced speaking more often.",
+ type:"mc",
+ q:"Why is 'gave' in the Past Simple?",
+ opts:["Because it is a future plan","Because the exact time is stated","Because the action continues now","Because it is a question"], ans:1,
+ explain:"“Two months ago” identifies a specific finished time.",
+ speak:"Say: Two months ago, I ___."
+},
+{
+ section:"3 · New Experiences",
+ audio:"Have you ever tried something that made you nervous? I have. Two months ago, I gave a presentation in English for the first time. I was very nervous at the beginning, but I finished it successfully. Since then, I have practiced speaking more often.",
+ type:"fill",
+ q:"Complete: Since then, I have ______ speaking more often.",
+ ansText:["practiced","practised"],
+ explain:"The missing word is practiced.",
+ speak:"Say one thing you have practiced recently."
+},
+{
+ section:"4 · Food Experience",
+ audio:"Daniel has tried many types of food in his life. He has eaten sushi, Indian curry, and Mexican tacos. He tried sushi for the first time when he was twenty. He didn't like it then, but now he loves it. He has never eaten Korean barbecue.",
+ type:"mc",
+ q:"Which food has Daniel never eaten?",
+ opts:["Sushi","Indian curry","Mexican tacos","Korean barbecue"], ans:3,
+ explain:"Daniel has never eaten Korean barbecue.",
+ speak:"What interesting food have you tried?"
+},
+{
+ section:"4 · Food Experience",
+ audio:"Daniel has tried many types of food in his life. He has eaten sushi, Indian curry, and Mexican tacos. He tried sushi for the first time when he was twenty. He didn't like it then, but now he loves it. He has never eaten Korean barbecue.",
+ type:"mc",
+ q:"When did Daniel try sushi for the first time?",
+ opts:["Last year","When he was twenty","When he was thirty","The audio doesn't say"], ans:1,
+ explain:"The specific time is 'when he was twenty.'",
+ speak:"When did you first try a food you now like?"
+},
+{
+ section:"4 · Food Experience",
+ audio:"Daniel has tried many types of food in his life. He has eaten sushi, Indian curry, and Mexican tacos. He tried sushi for the first time when he was twenty. He didn't like it then, but now he loves it. He has never eaten Korean barbecue.",
+ type:"fill",
+ q:"Complete: Daniel has ______ many types of food in his life.",
+ ansText:["tried"],
+ explain:"The missing past participle is tried.",
+ speak:"Say: I have tried ___."
+},
+{
+ section:"5 · Learning Experience",
+ audio:"I have studied English for several years, but speaking has always been difficult for me. In January, I joined a conversation group. I attended six sessions and met people from different professions. Since January, I have become more confident when I speak.",
+ type:"mc",
+ q:"What did the speaker join in January?",
+ opts:["A gym","A conversation group","A law course","A travel club"], ans:1,
+ explain:"The speaker joined a conversation group in January.",
+ speak:"Have you ever joined an English conversation group?"
+},
+{
+ section:"5 · Learning Experience",
+ audio:"I have studied English for several years, but speaking has always been difficult for me. In January, I joined a conversation group. I attended six sessions and met people from different professions. Since January, I have become more confident when I speak.",
+ type:"mc",
+ q:"What has changed since January?",
+ opts:["The speaker has traveled more.","The speaker has become more confident.","The speaker has changed jobs.","The speaker has stopped studying."], ans:1,
+ explain:"Since January, the speaker has become more confident.",
+ speak:"Since you started this course, what have you improved?"
+},
+{
+ section:"5 · Learning Experience",
+ audio:"I have studied English for several years, but speaking has always been difficult for me. In January, I joined a conversation group. I attended six sessions and met people from different professions. Since January, I have become more confident when I speak.",
+ type:"fill",
+ q:"Complete: I have ______ English for several years.",
+ ansText:["studied"],
+ explain:"The missing word is studied.",
+ speak:"Say: I have studied English for ___."
+},
+{
+ section:"6 · Final Listening",
+ audio:"Maria and Felipe are talking during a break. Maria asks, Have you ever visited Cartagena? Felipe says, Yes, I have. I went there last December with my family. We stayed for four days and visited the old city. Maria says she has never been there, but she has seen many photos and wants to visit next year.",
+ type:"mc",
+ q:"Has Felipe ever visited Cartagena?",
+ opts:["Yes, he has.","No, he hasn't.","The audio doesn't say.","He plans to go next year."], ans:0,
+ explain:"Felipe answers 'Yes, I have.'",
+ speak:"Ask a classmate: Have you ever visited Cartagena?"
+},
+{
+ section:"6 · Final Listening",
+ audio:"Maria and Felipe are talking during a break. Maria asks, Have you ever visited Cartagena? Felipe says, Yes, I have. I went there last December with my family. We stayed for four days and visited the old city. Maria says she has never been there, but she has seen many photos and wants to visit next year.",
+ type:"mc",
+ q:"Why does Felipe say 'I went there last December' instead of 'I have gone there last December'?",
+ opts:["Because December is a place","Because 'last December' is a specific finished time","Because Present Perfect is only negative","Because 'went' is a past participle"], ans:1,
+ explain:"Specific finished past time → Past Simple.",
+ speak:"Answer with two steps: Yes, I have. I went there in ___."
+},
+{
+ section:"6 · Final Listening",
+ audio:"Maria and Felipe are talking during a break. Maria asks, Have you ever visited Cartagena? Felipe says, Yes, I have. I went there last December with my family. We stayed for four days and visited the old city. Maria says she has never been there, but she has seen many photos and wants to visit next year.",
+ type:"fill",
+ q:"Complete Maria's experience: She has never ______ to Cartagena.",
+ ansText:["been"],
+ explain:"For life experience we say: has never been to...",
+ speak:"Say one place you have never been to."
+}
+];
+
+let i=0, score=0, checked=false, playCount=0, voices=[];
+const $=id=>document.getElementById(id);
+const voiceSel=$("voiceSel"), speedSel=$("speedSel");
+const playBtn=$("playBtn"), repeatBtn=$("repeatBtn"), plays=$("plays");
+const question=$("question"), answerArea=$("answerArea"), feedback=$("feedback");
+const checkBtn=$("checkBtn"), nextBtn=$("nextBtn");
+
+function loadVoices(){
+  voices=speechSynthesis.getVoices().filter(v=>/^en(-|_)/i.test(v.lang));
+  voiceSel.innerHTML="";
+  if(!voices.length){
+    const o=document.createElement("option"); o.value=""; o.textContent="Default English voice"; voiceSel.appendChild(o); return;
+  }
+  voices.forEach((v,idx)=>{
+    const o=document.createElement("option");
+    o.value=idx; o.textContent=`${v.name} (${v.lang})`;
+    voiceSel.appendChild(o);
+  });
+  const preferred=voices.findIndex(v=>/Google US English|Microsoft.*(Aria|Jenny)|Samantha/i.test(v.name));
+  if(preferred>=0) voiceSel.value=preferred;
+}
+loadVoices();
+speechSynthesis.onvoiceschanged=loadVoices;
+
+function speak(){
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(items[i].audio);
+  if(voices.length && voiceSel.value!=="") u.voice=voices[Number(voiceSel.value)];
+  u.lang=u.voice?.lang || "en-US";
+  u.rate=Number(speedSel.value);
+  u.pitch=1;
+  speechSynthesis.speak(u);
+  playCount++; plays.textContent=`Plays: ${playCount}`;
+}
+
+function render(){
+  checked=false; playCount=0; plays.textContent="Plays: 0";
+  feedback.className="feedback"; feedback.textContent="";
+  checkBtn.disabled=false; nextBtn.disabled=true;
+  const it=items[i];
+  $("sectionBadge").textContent=it.section;
+  $("counter").textContent=`Question ${i+1} of ${items.length}`;
+  $("bar").style.width=`${(i/items.length)*100}%`;
+  question.textContent=it.q;
+  $("speakPrompt").textContent=it.speak;
+  answerArea.innerHTML="";
+  if(it.type==="mc"){
+    const box=document.createElement("div"); box.className="options";
+    it.opts.forEach((t,idx)=>{
+      const lab=document.createElement("label"); lab.className="opt";
+      const inp=document.createElement("input"); inp.type="radio"; inp.name="answer"; inp.value=idx;
+      const span=document.createElement("span"); span.textContent=t;
+      lab.append(inp,span); box.appendChild(lab);
+    });
+    answerArea.appendChild(box);
+  } else {
+    const inp=document.createElement("input"); inp.type="text"; inp.id="fillAnswer"; inp.autocomplete="off"; inp.placeholder="Type the missing word";
+    answerArea.appendChild(inp);
+  }
+}
+
+function normalize(s){return s.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");}
+
+function check(){
+  if(checked) return;
+  const it=items[i]; let ok=false;
+  if(it.type==="mc"){
+    const selected=document.querySelector('input[name="answer"]:checked');
+    if(!selected){ feedback.className="feedback bad"; feedback.textContent="Choose an answer first."; return; }
+    ok=Number(selected.value)===it.ans;
+    document.querySelectorAll('input[name="answer"]').forEach(x=>x.disabled=true);
+  } else {
+    const val=$("fillAnswer").value;
+    if(!val.trim()){ feedback.className="feedback bad"; feedback.textContent="Type your answer first."; return; }
+    ok=it.ansText.map(normalize).includes(normalize(val));
+    $("fillAnswer").disabled=true;
+  }
+  checked=true;
+  if(ok){ score++; feedback.className="feedback ok"; feedback.textContent="✓ Correct. "+it.explain; }
+  else{ feedback.className="feedback bad"; feedback.textContent="✗ Not quite. "+it.explain; }
+  checkBtn.disabled=true; nextBtn.disabled=false;
+}
+
+function next(){
+  speechSynthesis.cancel();
+  if(i<items.length-1){ i++; render(); }
+  else showResult();
+}
+
+function showResult(){
+  $("quizCard").classList.add("hidden"); $("resultCard").classList.remove("hidden");
+  $("bar").style.width="100%";
+  const pct=Math.round(score/items.length*100);
+  $("scoreText").textContent=pct+"%";
+  $("resultTitle").textContent=pct>=85?"Excellent listening!":pct>=70?"Good work!":"Keep practicing";
+  $("resultMsg").textContent=`You answered ${score} of ${items.length} questions correctly. Replay the activity and focus on time expressions such as ever, never, last year, ago, in 2019, since, and for.`;
+}
+
+playBtn.addEventListener("click",speak);
+repeatBtn.addEventListener("click",speak);
+checkBtn.addEventListener("click",check);
+nextBtn.addEventListener("click",next);
+$("restartBtn").addEventListener("click",()=>{i=0;score=0;$("resultCard").classList.add("hidden");$("quizCard").classList.remove("hidden");render();});
+render();
+</script>
+</body>
+</html>
